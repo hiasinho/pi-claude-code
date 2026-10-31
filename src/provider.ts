@@ -3,7 +3,7 @@ import { discoverClaudeModels, getClaudeStatus, LOGIN_HINT } from "./claude-cli.
 import { API_ID, CLAUDE_CODE_MODELS, modelFromDiscovery, PROVIDER_ID } from "./model-catalog.ts";
 import { streamClaudeCode } from "./stream.ts";
 
-const PROVIDER_ENV_NAMES = ["PI_CLAUDE_CODE_COMMAND", "PI_CLAUDE_CODE_CONFIG_DIR", "CLAUDE_CONFIG_DIR"] as const;
+const PROVIDER_ENV_NAMES = ["PI_CLAUDE_CODE_COMMAND", "PI_CLAUDE_CODE_CONFIG_DIR", "CLAUDE_CONFIG_DIR", "ANTHROPIC_BASE_URL"] as const;
 
 async function providerEnvironment(ctx: AuthContext): Promise<ProviderEnv | undefined> {
   const env: ProviderEnv = {};

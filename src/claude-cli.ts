@@ -9,7 +9,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { registerSessionResourceCleanup } from "@earendil-works/pi-ai";
 import { TurnRelay } from "./turn-relay.ts";
 import { usageCreditsAllowed, usageCreditsChargeError, type RateLimitInfo } from "./billing.ts";
-import { envFlagEnabled } from "./env.ts";
+import { claudeUpstreamUrl, envFlagEnabled } from "./env.ts";
 import type { DiscoveredClaudeModel } from "./model-catalog.ts";
 import type {
   AnthropicStreamEvent,
@@ -411,7 +411,7 @@ class AsyncQueue<T> {
 }
 
 function conflictingEnvironment(env: Record<string, string>): string[] {
-  const conflicts = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "ANTHROPIC_FOUNDRY_API_KEY"].filter(
+  const conflicts = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_FOUNDRY_API_KEY"].filter(
     (key) => !!env[key],
   );
   for (const key of ["CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_USE_FOUNDRY"]) {
@@ -679,6 +679,7 @@ const MAX_CACHED_CLAUDE_PROCESSES = 2;
 interface ClaudeLaunchPlan {
   env: Record<string, string>;
   fingerprint: string;
+  upstreamUrl: string;
   timeoutMs: number;
 }
 
@@ -709,8 +710,10 @@ function frameHistoryHash(frames: NativeFrame[]): string {
 function launchPlan(input: RunClaudeInput): ClaudeLaunchPlan {
   const timeoutMs = input.timeoutMs ?? 180_000;
   const env = processEnvironment(input.env, input.extraBody);
+  const upstreamUrl = claudeUpstreamUrl(env, input.upstreamUrl);
   return {
     env,
+    upstreamUrl,
     timeoutMs,
     fingerprint: digest({
       command: configuredCommand(env),
@@ -721,7 +724,7 @@ function launchPlan(input: RunClaudeInput): ClaudeLaunchPlan {
       model: input.model,
       systemPrompt: input.systemPrompt,
       timeoutMs,
-      upstreamUrl: input.upstreamUrl ?? "https://api.anthropic.com",
+      upstreamUrl,
     }),
   };
 }
@@ -769,7 +772,7 @@ class ClaudeProcess {
         writeFile(systemPath, input.systemPrompt, "utf8"),
       ]);
 
-      relay = new TurnRelay(input.upstreamUrl ?? "https://api.anthropic.com", plan.timeoutMs);
+      relay = new TurnRelay(plan.upstreamUrl, plan.timeoutMs);
       const env = { ...plan.env, ANTHROPIC_BASE_URL: await relay.start() };
       const mcp = {
         mcpServers: {

@@ -30,8 +30,12 @@ as a subscription. The provider also declares an `oauth` method, marked
 `isSubscription`, only so Pi's subscription-aware UI works. Its `login()` never
 starts a flow; it tells the user to run `claude auth login`.
 
-Inherited API-key, proxy, Bedrock, Vertex, and Foundry overrides are rejected
-to avoid silently changing authentication or billing.
+Inherited API-key, auth-token, Bedrock, Vertex, and Foundry overrides are rejected.
+This fork allows `ANTHROPIC_BASE_URL`: discovery uses it directly, and workers
+retain the local relay while forwarding to that configured upstream. The resolved
+upstream is included in the worker fingerprint so endpoint changes cannot reuse
+a process connected to a previous destination. Custom endpoints receive Claude
+Code authentication headers and may have different billing semantics.
 
 ## Usage-credit guard
 

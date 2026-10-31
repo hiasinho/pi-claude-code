@@ -38,7 +38,7 @@ execution. Claude Code only talks to the model. It never runs tools itself.
 ## Installation
 
 ```sh
-pi install https://github.com/earendil-works/pi-claude-code
+pi install https://github.com/hiasinho/pi-claude-code
 ```
 
 Then pick a model from the **Claude Code Subscription (Experimental)** provider
@@ -75,9 +75,19 @@ Requests made through this extension count against your Claude subscription's
 usage quota and rate limits, the same as any other Claude Code usage. The
 extension does not give you separate or unlimited usage.
 
-To avoid silently changing how you're authenticated or billed, the extension
-refuses to run if your environment sets an API key, proxy, Bedrock, Vertex, or
-Foundry override for Claude Code.
+### Custom endpoint (fork behavior)
+
+This fork accepts `ANTHROPIC_BASE_URL` from the environment or provider-scoped
+environment settings. Model discovery uses that endpoint, and the local turn
+relay forwards model requests to it instead of `https://api.anthropic.com`.
+An internal explicit upstream URL takes precedence.
+
+**Only configure an endpoint you trust:** Claude Code authentication headers and
+conversation content are forwarded to it. Its authentication, billing, quotas,
+and model availability may differ from a direct Claude subscription; the
+subscription description above is not a guarantee for custom endpoints.
+
+API-key, auth-token, Bedrock, Vertex, and Foundry overrides remain rejected.
 
 ## Limitations
 
